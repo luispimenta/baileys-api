@@ -13,9 +13,14 @@ import makeWASocket, {
 import { toDataURL } from 'qrcode'
 import __dirname from './dirname.js'
 import response from './response.js'
+import axios from 'axios';
 
 const sessions = new Map()
 const retries = new Map()
+
+const axiosInstance = axios.create({
+    baseURL: process.env.WEBHOOK_URL || '',
+})
 
 const sessionsDir = (sessionId = '') => {
     return join(__dirname, 'sessions', sessionId ? sessionId : '')
@@ -87,22 +92,9 @@ const createSession = async (sessionId, isLegacy = false, res = null) => {
         }
     })
 
-    // Automatically read incoming messages, uncomment below codes to enable this behaviour
-    /*
     wa.ev.on('messages.upsert', async (m) => {
-        const message = m.messages[0]
-
-        if (!message.key.fromMe && m.type === 'notify') {
-            await delay(1000)
-
-            if (isLegacy) {
-                await wa.chatRead(message.key, 1)
-            } else {
-                await wa.sendReadReceipt(message.key.remoteJid, message.key.participant, [message.key.id])
-            }
-        }
+        await sendWebhook('messages.upsert', m, sessionId)
     })
-    */
 
     wa.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update
@@ -267,6 +259,110 @@ const init = () => {
     })
 }
 
+const getWhatsAppId = (id) => {
+    if (id.includes('@g.us') || id.includes('@s.whatsapp.net')) return id
+    return id.includes('-') ? `${id}@g.us` : `${id}@s.whatsapp.net`
+}
+
+const parseParticipants = (users) => {
+    return users.map((users) => getWhatsAppId(users))
+}
+
+const sendWebhook = async (type, body, key) => {
+    if (!process.env.WEBHOOK_ENABLED) return
+    axiosInstance.post('', { type, body, instanceKey: key }).catch(() => { })
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const groupUpdateSubject = async (session, jid, subject) => {
+    try {
+        return session.groupUpdateSubject(jid, subject)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const groupUpdateDescription = async (session, jid, description) => {
+    try {
+        return session.groupUpdateDescription(jid, description)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const groupSettingUpdate = async (session, jid, action) => {
+    try {
+        return session.groupSettingUpdate(jid, action)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const updateProfilePicture = async (session, jid, url) => {
+    try {
+        const img = await axios.get(url, { responseType: 'arraybuffer' })
+        return session.updateProfilePicture(jid, img.data)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const groupInviteCode = async (session, jid) => {
+    try {
+        return session.groupInviteCode(jid)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const groupCreate = async (session, name, users) => {
+    try {
+        return session.groupCreate(name, users.map(getWhatsAppId))
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const groupParticipantsUpdate = async (session, jid, users, action) => {
+    try {
+        return session.groupParticipantsUpdate(jid, parseParticipants(users), action)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const onWhatsApp = async (session, number) => {
+    try {
+        if (number.includes('@g.us')) return [{ exists: true }]
+        return await session.onWhatsApp(number)
+    } catch {
+        return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+    }
+}
+
 export {
     isSessionExists,
     createSession,
@@ -279,4 +375,12 @@ export {
     formatGroup,
     cleanup,
     init,
+    groupUpdateSubject,
+    groupUpdateDescription,
+    groupSettingUpdate,
+    updateProfilePicture,
+    groupInviteCode,
+    groupCreate,
+    groupParticipantsUpdate,
+    onWhatsApp
 }
