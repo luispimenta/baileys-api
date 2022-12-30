@@ -79,6 +79,9 @@ const createSession = async (sessionId, isLegacy = false, res = null) => {
 
     if (!isLegacy) {
         store.readFromFile(sessionsDir(`${sessionId}_store.json`))
+        setInterval(() => {
+          store.writeToFile(sessionsDir(`${sessionId}_store.json`))
+        }, 10_000)
         store.bind(wa.ev)
     }
 
