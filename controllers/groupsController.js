@@ -1,4 +1,4 @@
-import { getSession, getChatList, isExists, sendMessage, formatGroup, groupUpdateSubject, groupUpdateDescription, groupSettingUpdate, updateProfilePicture, groupInviteCode, groupCreate, groupParticipantsUpdate } from './../whatsapp.js'
+import { getSession, getChatList, isExists, sendMessage, formatGroup, groupUpdateSubject, groupUpdateDescription, groupSettingUpdate, updateProfilePicture, groupInviteCode, groupCreate, groupParticipantsUpdate, groupFetchAllParticipating } from './../whatsapp.js'
 import response from './../response.js'
 
 const getList = (req, res) => {
@@ -170,4 +170,17 @@ const participantsUpdate = async (req, res) => {
     }
 }
 
-export { getList, getGroupMetaData, send, updateSubject, updateDescription, updateSetting, updatePicture, inviteCode, createGroup, participantsUpdate }
+const getAllparticipants = async (req, res) => {
+    const session = getSession(res.locals.sessionId)
+
+    try {
+        const data = await groupFetchAllParticipating(session)
+
+        response(res, 200, true, data)
+    } catch {
+        response(res, 500, false, 'Failed to get all participants.')
+    }
+}
+
+
+export { getList, getGroupMetaData, send, updateSubject, updateDescription, updateSetting, updatePicture, inviteCode, createGroup, participantsUpdate, getAllparticipants }

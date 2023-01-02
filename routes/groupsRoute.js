@@ -13,6 +13,8 @@ router.get('/:jid', query('id').notEmpty(), requestValidator, sessionValidator, 
 
 router.get('/meta/:jid', query('id').notEmpty(), requestValidator, sessionValidator, controller.getGroupMetaData)
 
+router.get('/getallparticipants/:id', requestValidator, sessionValidator, controller.getAllparticipants)
+
 router.post(
     '/send',
     query('id').notEmpty(),

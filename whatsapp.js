@@ -366,6 +366,17 @@ const onWhatsApp = async (session, number) => {
     }
 }
 
+/**
+ * @param {import('@adiwajshing/baileys').AnyWASocket} session
+ */
+const groupFetchAllParticipating = async (session) => {
+  try {
+      return await session.groupFetchAllParticipating()
+  } catch {
+      return Promise.reject(null) // eslint-disable-line prefer-promise-reject-errors
+  }
+}
+
 export {
     isSessionExists,
     createSession,
@@ -385,5 +396,6 @@ export {
     groupInviteCode,
     groupCreate,
     groupParticipantsUpdate,
-    onWhatsApp
+    onWhatsApp,
+    groupFetchAllParticipating
 }
