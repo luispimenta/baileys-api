@@ -64,4 +64,12 @@ router.post(
   controller.groupParticipantsUpdate
 );
 
+router.post(
+  '/group/acceptinvite',
+  body('code'),
+  requestValidator,
+  sessionValidator,
+  controller.groupAcceptInvite
+);
+
 export default router;

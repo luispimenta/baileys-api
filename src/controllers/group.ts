@@ -150,7 +150,21 @@ export const groupParticipantsUpdate: RequestHandler = async (req, res) => {
     const data = await session.groupParticipantsUpdate(jid, parseParticipants(users), action);
     res.status(200).json({ success: true, data: data });
   } catch (e) {
-    const message = 'An error occured during create a new group';
+    const message = 'An error occured during participants update';
+    logger.error(e, message);
+    res.status(500).json({ error: message });
+  }
+};
+
+export const groupAcceptInvite: RequestHandler = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { code } = req.body;
+    const session = getSession(sessionId)!;
+    const data = await session.groupAcceptInvite(code);
+    res.status(200).json({ success: true, data: data });
+  } catch (e) {
+    const message = 'An error occured during join group';
     logger.error(e, message);
     res.status(500).json({ error: message });
   }

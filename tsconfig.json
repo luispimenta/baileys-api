@@ -9,7 +9,8 @@
     "declaration": false,
     "skipLibCheck": true,
     "lib": ["ESNext"],
-    "outDir": "dist/"
+    "outDir": "dist/",
+    "noImplicitAny": false
   },
   "include": ["src/**/*.ts"]
 }
